@@ -1,0 +1,3 @@
+[submodule "source/Windows-IoT-Core-Graphics-Library"]
+	path = source/Windows-IoT-Core-Graphics-Library
+	url = https://github.com/Corom/Windows-IoT-Core-Graphics-Library.git
