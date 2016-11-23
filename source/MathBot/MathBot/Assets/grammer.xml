@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<grammar
+  version="1.0" xml:lang="en-US" root="sauce"
+  sapi:alphabet="x-microsoft-ups"
+  xmlns="http://www.w3.org/2001/06/grammar"
+  xmlns:sapi="http://schemas.microsoft.com/Speech/2002/06/SRGSExtensions">
+
+  <rule id="sauce" scope="public">
+    <item> <token sapi:display="MathBot" sapi:pron="M AE TH . B AA T"> mathbot </token> </item>
+
+  </rule>
+  
+
+</grammar>
