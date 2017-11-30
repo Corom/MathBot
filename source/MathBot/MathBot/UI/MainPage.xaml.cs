@@ -20,8 +20,13 @@ namespace MathBot
         public MainPage()
         {
             this.InitializeComponent();
-            //device = new MathBotDevice(me);
+            
             IMathBotDevice device = this.deviceIU;
+
+#if ARM
+            // When running on ARM use the actual hardware
+            device = new MathBotDevice(device);
+#endif
 
             bot = new MathBot(device);
 

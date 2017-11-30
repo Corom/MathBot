@@ -1,9 +1,12 @@
-﻿using Glovebox.Graphics;
+﻿using Adventure_Works.Speech;
+using Glovebox.Graphics;
+using Microsoft.ProjectOxford.Face;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.Graphics.Imaging;
@@ -13,6 +16,7 @@ using Windows.Media.Devices;
 using Windows.Media.MediaProperties;
 using Windows.Media.SpeechRecognition;
 using Windows.Storage;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -28,17 +32,112 @@ namespace MathBot
         string num2 = string.Empty;
         KeyInfo operation = null;
         bool answerDisplayed = false;
+        //DispatcherTimer timer;
+        Timer timer;
+        Dictionary<string, bool> greeted = new Dictionary<string, bool>();
+
 
         public FaceManager FaceManager { get; private set; }
 
         public MathBot(IMathBotDevice device)
         {
+            SoundUtilities.Volume = .1f;
+
             this.device = device;
             FaceManager = new FaceManager(device);
-            FaceManager.LoadImages().ContinueWith(t => FaceManager.SetFace(Faces.Normal));
+            FaceManager.LoadImages().ContinueWith(t => FaceManager.SetFace(Faces.Sad));
             device.KeyPad.KeyPressed += Device_KeyPressed;
 
             var ignore = camera.Initialize();
+
+            //timer = new DispatcherTimer();
+            //timer.Interval = TimeSpan.FromSeconds(1);
+            //timer.Tick += (a, b) => { SeeWithCamera(); };
+            //timer = new Timer(a => SeeWithCamera(), null, TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(1));
+
+            
+            Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(4));
+                while (true)
+                {
+
+                    await SeeWithCamera();
+                    //await Task.Delay(TimeSpan.FromSeconds(1));
+
+                }
+            });
+            
+        }
+
+        enum WatchState { Waiting,Faces,Recognized}
+
+        private WatchState watching = WatchState.Waiting;
+
+        HashSet<string> peopleSeen = new HashSet<string>();
+
+        private async Task SeeWithCamera()
+        {
+            // avoid overlapping timmer
+            //timer.Stop();
+
+
+
+            bool isAngry = false;
+            var sw = Stopwatch.StartNew();
+            var scene = await camera.See();
+            sw.Stop();
+            if (scene.Faces.Length > 0)
+            {
+                foreach (var face in scene.Faces.Where(f => f.Name != null))
+                {
+                    if (!peopleSeen.Contains(face.Name))
+                    {
+                        peopleSeen.Add(face.Name);
+                        if (face.Name == "Malik")
+                            FaceManager.SetFace(Faces.Angry);
+                        else if (face.Attributes.Gender == "Female")
+                            FaceManager.SetFace(Faces.Happy);
+                        else
+                            FaceManager.SetFace(Faces.Normal);
+
+                        await device.SayIt($"Hello {face.Name}.");
+                    }
+                }
+
+                if (peopleSeen.Count == 0 && FaceManager.CurrentFace != Faces.Surprised)
+                    FaceManager.SetFace(Faces.Surprised);
+
+                if (scene.Faces.Max(f => f.Emotion.Anger) > .3 && FaceManager.CurrentFace != Faces.Angry)
+                    FaceManager.SetFace(Faces.Angry);
+            }
+            else
+            {
+                peopleSeen.Clear();
+                if (FaceManager.CurrentFace != Faces.Sad)
+                    FaceManager.SetFace(Faces.Sad);
+                Debug.WriteLine($"I am lonely. ({sw.ElapsedMilliseconds}ms)");
+            }
+
+            /*
+            var face = (await camera.LookForFaces()).FirstOrDefault();
+            if (face != null)
+            {
+                var x = face.FaceBox.Width / ((double)face.FaceBox.X + (double)face.FaceBox.Width / 2);
+                var y = face.FaceBox.Height / ((double)face.FaceBox.Y + (double)face.FaceBox.Height / 2);
+
+                device.LeftEyeDisplay.FrameClear();
+                device.LeftEyeDisplay.FrameSet(Led.On, device.LeftEyeDisplay.PointPostion((int)((1 - y) * 8), (int)(x * 8)));
+                device.LeftEyeDisplay.FrameDraw();
+            }
+            else
+            {
+                device.LeftEyeDisplay.FrameClear();
+                device.LeftEyeDisplay.FrameDraw();
+            }
+            */
+
+            //timer.Start();
         }
 
         private async void Device_KeyPressed(KeyPadKey key1)
@@ -58,28 +157,36 @@ namespace MathBot
             //    me.SetSource(s, s.ContentType);
             //    await me.PlayAsync();
             //}
-            if (key.Key == KeyPadKey.Decimal)
+            if (key.Key == KeyPadKey.Divide || key.Key == KeyPadKey.Multiply)
             {
-                //FaceManager.SetFace(Faces.Angry);
-                //ListenAsync();
-                var face = (await camera.LookForFaces()).FirstOrDefault();
-                if (face != null)
-                {
-                    var x = face.FaceBox.Width / ((double)face.FaceBox.X + (double)face.FaceBox.Width / 2);
-                    var y = face.FaceBox.Height / ((double)face.FaceBox.Y + (double)face.FaceBox.Height / 2);
+                if (key.Key == KeyPadKey.Divide & SoundUtilities.Volume > 0)
+                    SoundUtilities.Volume = Math.Max(SoundUtilities.Volume - .1f, 0);
+                if (key.Key == KeyPadKey.Multiply & SoundUtilities.Volume < 1)
+                    SoundUtilities.Volume = Math.Min(SoundUtilities.Volume + .1f, 1);
 
-                    device.LeftEyeDisplay.FrameClear();
-                    device.LeftEyeDisplay.FrameSet(Led.On, device.LeftEyeDisplay.PointPostion((int)((1-y) * 8), (int)(x * 8)));
-                    device.LeftEyeDisplay.FrameDraw();
-                }
-                else
-                {
-                    device.LeftEyeDisplay.FrameClear();
-                    device.LeftEyeDisplay.FrameDraw();
-                }
-
+                device.LcdDisplay.Clear();
+                device.LcdDisplay.SetCursor(0, 0);
+                device.LcdDisplay.Print("Volume: " + (int)(SoundUtilities.Volume * 100));
+                answerDisplayed = true;
+                return;
             }
 
+            if (key.Key == KeyPadKey.Decimal)
+            {
+                //greeted.Clear();
+                /* if (timer.IsEnabled)
+                     timer.Stop();
+                 else
+                     timer.Start();*/
+
+                //FaceManager.SetFace(Faces.Angry);
+                //ListenAsync();
+
+                //SpeechService.Instance.Initialize();
+
+                //device.SayIt("If you only knew the power of the darkside");
+                return;
+            }
 
             if (key.IsNumber)
             {
@@ -144,11 +251,12 @@ namespace MathBot
             recognizer = new SpeechRecognizer();
             //recognizer.Constraints.Add(new SpeechRecognitionListConstraint(new[] { "Mathbot" }));
             //recognizer.Constraints.Add(new SpeechRecognitionGrammarFileConstraint(await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/grammer.xml"))));
-            await recognizer.CompileConstraintsAsync();
+            //await recognizer.CompileConstraintsAsync();
 
             //recognizer.Timeouts.InitialSilenceTimeout = TimeSpan.FromSeconds(5);
             //recognizer.Timeouts.EndSilenceTimeout = TimeSpan.FromSeconds(20);
-            //recognizer.Timeouts.BabbleTimeout = TimeSpan.FromSeconds(5);
+            //recognizer.Timeouts.BabbleTimeout = TimeSpan.FromSeconds(2);
+
 
 
             recognizer.HypothesisGenerated += Recognizer_HypothesisGenerated;

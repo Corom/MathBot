@@ -15,6 +15,8 @@ namespace MathBot
     {
         IMathBotDevice device;
         Dictionary<Faces, FaceImages> faces = new Dictionary<Faces, FaceImages>();
+
+
         public FaceManager(IMathBotDevice device)
         {
             this.device = device;
@@ -26,14 +28,19 @@ namespace MathBot
 
             faces[Faces.Normal] = await LoadFace("eye/normal", "eye/normal", "mouth/normal", imageCache);
             faces[Faces.Angry] = await LoadFace("eye/angry-right", "eye/angry-left", "mouth/angry", imageCache);
-            faces[Faces.Happy] = faces[Faces.Normal];
-            faces[Faces.Sad] = faces[Faces.Normal];
-            faces[Faces.Surprised] = faces[Faces.Normal];
+            faces[Faces.Happy] = await LoadFace("eye/love", "eye/love", "mouth/normal", imageCache);
+            faces[Faces.Sad] = await LoadFace("eye/normal", "eye/normal", "mouth/sad", imageCache);
+            faces[Faces.Surprised] = await LoadFace("eye/big", "eye/big", "mouth/surprized", imageCache);
             faces[Faces.Afraid] = faces[Faces.Normal];
         }
 
+
+        public Faces CurrentFace { get; private set; }
+
         public void SetFace(Faces face)
         {
+            CurrentFace = face;
+
             FaceImages faceImages;
             if (faces.TryGetValue(face, out faceImages))
             {
@@ -96,6 +103,7 @@ namespace MathBot
     public enum Faces
     {
         Normal,
+        Focused,
         Happy,
         Sad,
         Angry,

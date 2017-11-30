@@ -12,6 +12,8 @@ namespace MathBot
 {
     public static class SoundUtilities
     {
+        public static float Volume { get; set; } = 1;
+
         private static Dictionary<string, SourceVoice> LoadedSounds = new Dictionary<string, SourceVoice>();
         private static Dictionary<string, AudioBufferAndMetaData> AudioBuffers = new Dictionary<string, AudioBufferAndMetaData>();
         private static MasteringVoice m_MasteringVoice;
@@ -41,7 +43,7 @@ namespace MathBot
                 return m_XAudio;
             }
         }
-        public static void PlaySound(string soundfile, float volume = 1)
+        public static void PlaySound(string soundfile)
         {
             SourceVoice sourceVoice;
             if (!LoadedSounds.ContainsKey(soundfile))
@@ -49,7 +51,7 @@ namespace MathBot
 
                 var buffer = GetBuffer(soundfile);
                 sourceVoice = new SourceVoice(XAudio, buffer.WaveFormat, true);
-                sourceVoice.SetVolume(volume, SharpDX.XAudio2.XAudio2.CommitNow);
+                sourceVoice.SetVolume(Volume, SharpDX.XAudio2.XAudio2.CommitNow);
                 sourceVoice.SubmitSourceBuffer(buffer, buffer.DecodedPacketsInfo);
                 sourceVoice.Start();
             }
@@ -61,7 +63,7 @@ namespace MathBot
             }
         }
 
-        public static Task PlaySound(Stream stream, float volume = 1)
+        public static Task PlaySound(Stream stream)
         {
             var soundstream = new SoundStream(stream);
             var buffer = new AudioBufferAndMetaData()
@@ -74,8 +76,15 @@ namespace MathBot
             };
 
             var sourceVoice = new SourceVoice(XAudio, buffer.WaveFormat, true);
-            sourceVoice.SetVolume(volume, SharpDX.XAudio2.XAudio2.CommitNow);
+            sourceVoice.SetVolume(Volume, SharpDX.XAudio2.XAudio2.CommitNow);
             sourceVoice.SubmitSourceBuffer(buffer, buffer.DecodedPacketsInfo);
+
+
+            //var effect = new SharpDX.XAPO.Fx.Echo(XAudio);
+            //EffectDescriptor effectDescriptor = new EffectDescriptor(effect);
+            //sourceVoice.SetEffectChain(effectDescriptor);
+            //sourceVoice.EnableEffect(0);
+
             sourceVoice.Start();
 
             TaskCompletionSource<object> mediaDone = new TaskCompletionSource<object>();

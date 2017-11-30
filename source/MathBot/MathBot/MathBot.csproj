@@ -44,7 +44,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\ARM\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ARM</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>ARM</PlatformTarget>
@@ -91,10 +91,15 @@
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
     <Content Include="Assets\eye\angry-left.bmp" />
     <Content Include="Assets\eye\angry-right.bmp" />
+    <Content Include="Assets\eye\big.bmp" />
+    <Content Include="Assets\eye\love.bmp" />
     <Content Include="Assets\eye\normal.bmp" />
+    <Content Include="Assets\lexicon.pls" />
     <Content Include="Assets\grammer.xml" />
     <Content Include="Assets\mouth\angry.bmp" />
     <Content Include="Assets\mouth\normal.bmp" />
+    <Content Include="Assets\mouth\sad.bmp" />
+    <Content Include="Assets\mouth\surprized.bmp" />
     <Content Include="Fonts\5x8_lcd_hd44780u_a02.ttf" />
     <None Include="project.json" />
   </ItemGroup>
@@ -107,7 +112,11 @@
     <Compile Include="Devices\IMathBotDevice.cs" />
     <Compile Include="FaceManager.cs" />
     <Compile Include="KeyInfo.cs" />
+    <Compile Include="LUISAPI.cs" />
+    <Compile Include="LUISIntentHandlers.cs" />
+    <Compile Include="LUISIntentStatus.cs" />
     <Compile Include="SoundUtilities.cs" />
+    <Compile Include="SpeechService.cs" />
     <Compile Include="UI\LcdDisplayControl.xaml.cs">
       <DependentUpon>LcdDisplayControl.xaml</DependentUpon>
     </Compile>
@@ -132,6 +141,7 @@
     <None Include="MathBot_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\grammer-command.xml" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -164,6 +174,10 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Windows-IoT-Core-Graphics-Library\Glovebox.Graphics\Glovebox.Graphics.csproj">
+      <Project>{6b7bcbab-4c1a-4e90-9f9b-31b233f90370}</Project>
+      <Name>Glovebox.Graphics</Name>
+    </ProjectReference>
     <ProjectReference Include="..\LcdHelper\LcdHelper.vcxproj">
       <Project>{08411c71-823d-4ccc-81a6-3e695df90a35}</Project>
       <Name>LcdHelper</Name>

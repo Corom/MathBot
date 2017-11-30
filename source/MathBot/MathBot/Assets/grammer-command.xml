@@ -10,7 +10,7 @@
   <lexicon uri="lexicon.pls" />
   
   <rule id="colors" scope="public">
-    MathBot
+    <ruleref special="GARBAGE"/>
   </rule>
 
   <!--rule id="colors" scope="public">

@@ -22,14 +22,14 @@ namespace MathBot
     class MathBotDevice : IMathBotDevice
     {
         SpeechSynthesizer ss = new SpeechSynthesizer();
-        MediaElement me;
+        IMathBotDevice me;
         public LED8x8Matrix LeftEyeDisplay { get; private set; }
         public LED8x8Matrix RightEyeDisplay { get; private set; }
         public LED8x8Matrix MouthDisplay { get; private set; }
         public ILcdDisplay LcdDisplay { get; private set; }
         public IKeyPad KeyPad { get; } = new WindowsKeyPad();
 
-        public MathBotDevice(MediaElement me, byte brightness = 2)
+        public MathBotDevice(IMathBotDevice me, byte brightness = 2)
         {
             this.me = me;
 
@@ -51,10 +51,7 @@ namespace MathBot
 
         public async Task SayIt(string text)
         {
-            var s = await ss.SynthesizeTextToStreamAsync(text);
-            me.SetSource(s, s.ContentType);
-
-            await me.PlayAsync();
+            await me.SayIt(text);
         }
 
     }
